@@ -1,21 +1,26 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 
-function Options({ options, correctOption, answer, points, dispatch }) {
-  const hasAnswered = answer !==null;
+function Options({ options, correctOption, answer, dispatch, points }) {
+  const hasAnswered = answer !== null;
   return (
     <div className="options">
-      {options?.map((option, index) => (
+      {options?.map((option) => (
         <button
-          className={`btn btn-option ${ index === answer ? 
-          "answer" : ""} ${hasAnswered ? index === correctOption ? "correct" : "wrong" : ""
+          id={option}
+          className={`btn btn-option ${option === answer ? "answer" : ""} ${
+            hasAnswered ? (option === correctOption ? "correct" : "wrong") : ""
           }`}
           key={option}
-          onClick={() => dispatch({ type: "chosenAnswer", payload: index })}
+          onClick={() =>
+            dispatch({
+              type: "chosenAnswer",
+              payload: { option, correctOption, points },
+            })
+          }
           disabled={hasAnswered}
-        >
-          {option}
-        </button>
+          dangerouslySetInnerHTML={{ __html: `${option}` }}
+        ></button>
       ))}
     </div>
   );

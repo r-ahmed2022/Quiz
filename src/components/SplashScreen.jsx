@@ -1,38 +1,48 @@
 /* eslint-disable react/prop-types */
-import { useState, useEffect } from "react";
-export default function SplashScreen({ handleSubmit, dispatch, status }) {
+import { useState } from "react";
+export default function SplashScreen({ handleSubmit, dispatch }) {
   const [formData, setFormData] = useState({
     category: "",
     difficulty: "",
   });
   function handleChange(e) {
     const { name, value } = e.target;
-    console.log(formData);
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   }
-  useEffect(() => {
-    const { category, difficulty } = formData;
-    async function loadQuiz() {
-      await fetch(
-        `https://opentdb.com/api.php?amount=10&category=${category}&difficulty=${difficulty}&type=multiple`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.response_code === 0)
-            dispatch({ type: "quizInitialize", payload: data.results });
-        })
-        .catch((error) => dispatch({ type: "dataFailed" }));
+
+  async function handleFormSubmit(e) {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(
+        `https://opentdb.com/api.php?amount=10&category=${formData.category}&difficulty=${formData.difficulty}&type=multiple`
+      );
+      const data = await response.json();
+
+      if (data.response_code === 0) {
+        //const dataResult = {data.result, category: formData.category, difficulty: formData.difficulty}
+        dispatch({
+          type: "quizInitialize",
+          payload: {
+            result: data.results,
+            category: formData.category,
+            difficulty: formData.difficulty,
+          },
+        });
+      } else {
+        dispatch({ type: "dataFailed" });
+      }
+    } catch (error) {
+      dispatch({ type: "dataFailed" });
     }
-    if (status === "initialize") loadQuiz();
-    return () => {
-      console.log("cleaning");
-    };
-  }, [status]);
+    handleSubmit(e, formData);
+  }
+
   return (
-    <form className="splashscreen" onSubmit={(e) => handleSubmit(e, formData)}>
+    <form className="splashscreen" onSubmit={handleFormSubmit}>
       <label>Category</label>
       <select
         className="btn"
@@ -40,11 +50,21 @@ export default function SplashScreen({ handleSubmit, dispatch, status }) {
         name="category"
         value={formData.category}
       >
-        <option value=" ">--Choose--</option>
-        <option value="9">General Knowledge</option>
-        <option value="21">Sports</option>
-        <option value="18">Computers</option>
-        <option value="11">Entertainment</option>
+        <option className="btn" value=" ">
+          --Choose--
+        </option>
+        <option className="btn" value="9">
+          General Knowledge
+        </option>
+        <option className="btn" value="21">
+          Sports
+        </option>
+        <option className="btn" value="18">
+          Computers
+        </option>
+        <option className="btn" value="11">
+          Entertainment
+        </option>
       </select>
       <br />
       <label>Difficulty</label>
@@ -54,10 +74,18 @@ export default function SplashScreen({ handleSubmit, dispatch, status }) {
         name="difficulty"
         value={formData.difficulty}
       >
-        <option value=" ">--Choose--</option>
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
+        <option className="btn" value=" ">
+          --Choose--
+        </option>
+        <option className="btn" value="easy">
+          Easy
+        </option>
+        <option className="btn" value="medium">
+          Medium
+        </option>
+        <option className="btn" value="hard">
+          Hard
+        </option>
       </select>
       <button className="btn btn-ui">Load</button>
     </form>
