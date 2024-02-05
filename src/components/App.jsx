@@ -21,7 +21,7 @@ const initialState = {
   category: "",
   difficulty: "",
   points: 0,
-  highscore: localStorage.getItem("highscore" || 0),
+  highscores: JSON.parse(localStorage.getItem("highestscores")) || [],
   secondsRemaining: null,
 };
 
@@ -85,14 +85,40 @@ function reducer(state, action) {
       return state;
     case "nextQuestion":
       return { ...state, index: action.payload + 1, answer: null };
-    case "finish":
-      return {
-        ...state,
-        status: "finish",
-        highscore:
-          state.points > state.highscore ? state.points : state.highscore,
-      };
-    case "restart":
+    case "finish": {
+      const currentScore = state.points;
+      const currentCategory = state.category;
+      const categoryIndex = state.highscores.findIndex(
+        (quiz) => quiz.category === currentCategory
+      );
+      if (
+        categoryIndex === -1 ||
+        currentScore > state.highscores[categoryIndex].score || 0
+      ) {
+        const updatedHighscores = [
+          ...state.highscores.filter(
+            (score) => score.category !== currentCategory
+          ),
+          { category: currentCategory, score: currentScore },
+        ].sort((a, b) => b.score - a.score);
+        localStorage.setItem(
+          "highestscores",
+          JSON.stringify(updatedHighscores)
+        );
+
+        return {
+          ...state,
+          highscores: updatedHighscores,
+          status: "finish",
+        };
+      } else {
+        return {
+          ...state,
+          status: "finish",
+        };
+      }
+    }
+     case "restart":
       return {
         ...initialState,
         question: state.questions,
@@ -119,7 +145,7 @@ export default function App() {
       difficulty,
       correctOption,
       points,
-      highscore,
+      highscores,
       secondsRemaining,
     },
     dispatch,
@@ -184,8 +210,9 @@ export default function App() {
           <FinishQuiz
             points={points}
             maxPossiblePoints={maxPossiblePoints}
-            highscore={highscore}
+            highscores={highscores}
             dispatch={dispatch}
+            category={category}
           />
         )}
       </Main>
